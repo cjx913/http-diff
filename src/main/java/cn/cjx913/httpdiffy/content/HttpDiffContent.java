@@ -6,6 +6,7 @@ import cn.cjx913.httpdiffy.server.HttpDiffResultService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONPath;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -145,8 +146,8 @@ public class HttpDiffContent implements Serializable {
         Map<String, Object> expectJsonPathValue = expectJsonPathValue(bodyAnalysisJsonPathValue, denoise);
         httpDiffResult.setExpectJsonPathValue(expectJsonPathValue);
 
-        boolean equalsJsonPathValue = equalsJsonPathValue(candidateHttpDiffResponseInfo.getResponseBody(), expectJsonPathValue);
-        httpDiffResult.setResult(equalsJsonPathValue);
+        EqualsJsonPathValueInfo equalsJsonPathValue = equalsJsonPathValue(candidateHttpDiffResponseInfo.getResponseBody(), expectJsonPathValue);
+        httpDiffResult.setResult(equalsJsonPathValue.isEquals());
 
         return httpDiffResultService.save(httpDiffResult);
     }
@@ -158,18 +159,95 @@ public class HttpDiffContent implements Serializable {
      * @param jsonPathValue
      * @return
      */
-    private boolean equalsJsonPathValue(Object object, Map<String, Object> jsonPathValue) {
-        String jsonString = object == null ? null : object instanceof String ? (String) object : JSON.toJSONString(object);
+    private EqualsJsonPathValueInfo equalsJsonPathValue(Object object, Map<String, Object> jsonPathValue) {
+        if (object == null) {
+            if (jsonPathValue == null || jsonPathValue.isEmpty()) {
+                return new EqualsJsonPathValueInfo(true);
+            } else {
+                return new EqualsJsonPathValueInfo(false);
+            }
+        }
 
-        Set<Map.Entry<String, Object>> entries = jsonPathValue.entrySet();
+        if (jsonPathValue == null) {
+            return new EqualsJsonPathValueInfo(false);
+        }
+
+        EqualsJsonPathValueInfo equalsJsonPathValueInfo = new EqualsJsonPathValueInfo();
+        boolean equals = true;
+        Map<String, Object> paths = JSONPath.paths(object);
+        Set<Map.Entry<String, Object>> entries = paths.entrySet();
         for (Map.Entry<String, Object> entry : entries) {
             String path = entry.getKey();
-            Object read = JSONPath.read(jsonString, path);
             Object value = entry.getValue();
-            if ((value == null && read == null) || value.equals(read)) continue;
-            return false;
+            JsonPathValueInfo jsonPathValueInfo = new JsonPathValueInfo(path, value);
+            if (!jsonPathValue.containsKey(path)) {
+                jsonPathValueInfo.setContainsKey(false);
+            } else {
+                Object o = jsonPathValue.get(path);
+                if (!InvalidObject.invalidObject.equals(o)) {
+                    jsonPathValueInfo.setExpectValue(o);
+                }
+            }
+            if (equals && !jsonPathValueInfo.isEquals()) {
+                equals = false;
+            }
+            equalsJsonPathValueInfo.getJsonPathValueInfos().add(jsonPathValueInfo);
         }
-        return true;
+        equalsJsonPathValueInfo.setEquals(equals);
+        return equalsJsonPathValueInfo;
+
+//        String jsonString = object == null ? null : object instanceof String ? (String) object : JSON.toJSONString(object);
+//        Set<Map.Entry<String, Object>> entries = jsonPathValue.entrySet();
+//        for (Map.Entry<String, Object> entry : entries) {
+//            String path = entry.getKey();
+//            Object read = JSONPath.read(jsonString, path);
+//            Object value = entry.getValue();
+//            if ((value == null && read == null) || (value != null && value.equals(read))) continue;
+//            return false;
+//        }
+//        return true;
+    }
+
+    @Setter
+    @Getter
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class EqualsJsonPathValueInfo implements Serializable {
+        private boolean equals;
+        @Builder.Default
+        private List<JsonPathValueInfo> jsonPathValueInfos = new ArrayList<>();
+
+        public EqualsJsonPathValueInfo(boolean equals) {
+            this.equals = equals;
+        }
+    }
+
+    @Setter
+    @Getter
+    @SuperBuilder
+    @AllArgsConstructor
+    public class JsonPathValueInfo implements Serializable {
+        private String path;
+        private Object value;
+        private Object expectValue;
+        @Builder.Default
+        private boolean containsKey = true;
+
+        private String message;
+
+        public JsonPathValueInfo(String path, Object value) {
+            this.path = path;
+            this.value = value;
+        }
+
+        public boolean isEquals() {
+            if (value == null) {
+                if (expectValue == null) return true;
+                else return false;
+            }
+            return value.equals(expectValue);
+        }
     }
 
     /**
@@ -184,16 +262,30 @@ public class HttpDiffContent implements Serializable {
         Map<String, Object> map = new LinkedHashMap<>(jsonPathValueMap.size());
         jsonPathValueMap.forEach((path, values) -> {
             if (CollectionUtils.isEmpty(values) || values.size() < finalMinExpectSameCount) return;
-            Map<Object, Long> collect = values.stream().collect(Collectors.groupingBy(o -> o, Collectors.counting()));
+            Map<Object, Long> collect = values.stream()
+                    .collect(Collectors.groupingBy(o -> o, Collectors.counting()));
             Set<Map.Entry<Object, Long>> entries = collect.entrySet();
-            entries.stream()
-                    .max((o1, o2) -> o1.getValue() > o2.getValue() ? 1 : -1)
-                    .ifPresent(objectLongEntry -> {
-                        if (objectLongEntry.getValue() < finalMinExpectSameCount) return;
-                        map.put(path, objectLongEntry.getKey());
-                    });
+            Optional<Map.Entry<Object, Long>> max = entries.stream()
+                    .max((o1, o2) -> o1.getValue() > o2.getValue() ? 1 : -1);
+            if (max.isPresent()) {
+                Map.Entry<Object, Long> objectLongEntry = max.get();
+                if (objectLongEntry.getValue() < finalMinExpectSameCount) {
+                    map.put(path, InvalidObject.invalidObject);
+                } else {
+                    map.put(path, objectLongEntry.getKey());
+                }
+            } else {
+                map.put(path, InvalidObject.invalidObject);
+            }
         });
         return map;
+    }
+
+    static class InvalidObject {
+        private final static InvalidObject invalidObject = new InvalidObject();
+
+        private InvalidObject() {
+        }
     }
 
     /**
