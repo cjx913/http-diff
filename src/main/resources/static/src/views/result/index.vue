@@ -107,7 +107,7 @@
             <vxe-modal v-model="compareResultModel.visible" width="70vw" height="80%" min-height="400" show-zoom resize title="比对结果">
               <template #default>
                 <div style="height: 100%;overflow: hidden">
-                  <vuejsonpretty></vuejsonpretty>
+                  <vuejsonpretty :data="compareResultModel.data.candidate"></vuejsonpretty>
                 </div>
               </template>
             </vxe-modal>
