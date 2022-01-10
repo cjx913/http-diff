@@ -5,13 +5,14 @@
 </template>
 
 <script>
-export default {
+import {defineComponent,ref, defineProps, watch } from "vue"
+export default defineComponent({
   name: "jsondiffpatch"
-}
+})
 </script>
 
 <script setup>
-import { ref, defineProps, watch } from "vue"
+
 
 const val = ref('')
 const jsondiffpatch = window.jsondiffpatch

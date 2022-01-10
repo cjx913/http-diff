@@ -77,43 +77,52 @@
               <vxe-column field="candidate.path" title="path" min-width="120"></vxe-column>
               <vxe-column field="candidate.httpStatus" title="responseStatus" width="120" align="center"></vxe-column>
 
-<!--              <vxe-column field="expectJsonPathValue" title="expectJsonPathValue">-->
-<!--                <template #default="{row}">-->
-<!--                  {{ JSON.stringify(row.expectJsonPathValue, null, 4) }}-->
-<!--                </template>-->
-<!--              </vxe-column>-->
-<!--              <vxe-column field="candidate" title="candidate">-->
-<!--                <template #default="{row}">-->
-<!--                  {{ JSON.stringify(row.candidate, null, 2) }}-->
-<!--                </template>-->
-<!--              </vxe-column>-->
-<!--              <vxe-column field="masters" title="masters">-->
-<!--                <template #default="{row}">-->
-<!--                  {{ JSON.stringify(row.masters, null, 2) }}-->
-<!--                </template>-->
-<!--              </vxe-column>-->
+              <!--              <vxe-column field="expectJsonPathValue" title="expectJsonPathValue">-->
+              <!--                <template #default="{row}">-->
+              <!--                  {{ JSON.stringify(row.expectJsonPathValue, null, 4) }}-->
+              <!--                </template>-->
+              <!--              </vxe-column>-->
+              <!--              <vxe-column field="candidate" title="candidate">-->
+              <!--                <template #default="{row}">-->
+              <!--                  {{ JSON.stringify(row.candidate, null, 2) }}-->
+              <!--                </template>-->
+              <!--              </vxe-column>-->
+              <!--              <vxe-column field="masters" title="masters">-->
+              <!--                <template #default="{row}">-->
+              <!--                  {{ JSON.stringify(row.masters, null, 2) }}-->
+              <!--                </template>-->
+              <!--              </vxe-column>-->
 
               <vxe-column field="version" title="version" width="100" align="center"></vxe-column>
               <vxe-column field="denoise" title="denoise" width="80" align="right"></vxe-column>
               <vxe-column title="查看" width="200" align="center" flex="right">
                 <template #default="{row}">
                   <el-space>
-                    <el-button type="text" @click="openModel(row)">比对结果</el-button>
-                    <el-button type="text" @click="openModel(row)">比对详情</el-button>
+                    <el-button type="text" @click="openCompareResultModel(row)">比对结果</el-button>
+                    <el-button type="text" @click="openCompareDetailsModel(row)">比对详情</el-button>
                   </el-space>
                 </template>
               </vxe-column>
             </vxe-table>
-            <vxe-modal v-model="model.visible" width="70vw" show-zoom resize>
+            <vxe-modal v-model="compareResultModel.visible" width="70vw" height="80%" min-height="400" show-zoom resize title="比对结果">
               <template #default>
-                <div style="height: 80vh;overflow: hidden">
+                <div style="height: 100%;overflow: hidden">
+                  <vuejsonpretty></vuejsonpretty>
+                </div>
+              </template>
+            </vxe-modal>
+            <vxe-modal v-model="compareDetailsModel.visible" width="70vw" height="80%" min-height="400" show-zoom
+                       resize title="比对详情">
+              <template #default>
+                <div style="height: 100%;overflow: hidden">
                   <el-scrollbar>
                     <div style="display: flex;">
                       <div style="flex-grow: 1;min-width: 300px"
-                           v-for="master in model.data.masters"
+                           v-for="master in compareDetailsModel.data.masters"
                            :key="master.name">
-                        <div>{{ model.data.candidate.name }}<===>{{ master.name }}</div>
-                        <jsondiffpatch :right="model.data.candidate.responseBody" :left="master.responseBody"/>
+                        <div>{{ compareDetailsModel.data.candidate.name }}<===>{{ master.name }}</div>
+                        <jsondiffpatch :right="compareDetailsModel.data.candidate.responseBody"
+                                       :left="master.responseBody"/>
                       </div>
                     </div>
                   </el-scrollbar>
@@ -147,6 +156,7 @@ export default {
 import { ref, reactive, onMounted, computed } from "vue"
 
 import jsondiffpatch from "../../components/jsondiffpatch/index.vue"
+import vuejsonpretty from "../../components/vuejsonpretty/index.vue"
 
 const httpDiffResultKeys = ref([])
 const currentKey = ref('')
@@ -156,7 +166,11 @@ const page = reactive({
   pageSize: 20,
   total: 0,
 })
-const model = reactive({
+const compareResultModel = reactive({
+  visible: false,
+  data: {}
+})
+const compareDetailsModel = reactive({
   visible: false,
   data: {}
 })
@@ -181,14 +195,6 @@ const getHttpDiffResult = () => {
       })
 }
 
-// const handleSelect = (key, keyPath) => {
-//   console.log(key, keyPath)
-//   currentKey.value = key
-//   page.currentPage = 1
-//   page.pageSize = 20
-//   getHttpDiffResult()
-// }
-
 const handleSelect = ({row}) => {
   currentKey.value = row.key
   page.currentPage = 1
@@ -211,9 +217,13 @@ const pageChange = (type, currentPage, pageSize, $event) => {
   getHttpDiffResult()
 }
 
-const openModel = (data) => {
-  model.visible = true
-  model.data = data
+const openCompareResultModel = (data) => {
+  compareResultModel.visible = true
+  compareResultModel.data = data
+}
+const openCompareDetailsModel = (data) => {
+  compareDetailsModel.visible = true
+  compareDetailsModel.data = data
 }
 
 </script>
@@ -225,4 +235,5 @@ const openModel = (data) => {
   height: 100%;
   width: 100%;
 }
+
 </style>

@@ -210,13 +210,13 @@ public class HttpDiffContent implements Serializable {
 
     @Setter
     @Getter
-    @SuperBuilder
-    @NoArgsConstructor
-    @AllArgsConstructor
     public class EqualsJsonPathValueInfo implements Serializable {
         private boolean equals;
         @Builder.Default
         private List<JsonPathValueInfo> jsonPathValueInfos = new ArrayList<>();
+
+        public EqualsJsonPathValueInfo() {
+        }
 
         public EqualsJsonPathValueInfo(boolean equals) {
             this.equals = equals;
@@ -225,8 +225,6 @@ public class HttpDiffContent implements Serializable {
 
     @Setter
     @Getter
-    @SuperBuilder
-    @AllArgsConstructor
     public class JsonPathValueInfo implements Serializable {
         private String path;
         private Object value;
