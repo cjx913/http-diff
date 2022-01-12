@@ -17,7 +17,7 @@
     </div>
     <div style="flex-grow: 1;overflow: auto;">
       <vue-json-pretty ref="vuejsonpretty" style="height: 100%"
-                       :data="data" v-model="selectedPaths"
+                       :data="data.candidate" v-model="selectedPaths"
                        :show-length="true"
                        :virtual="true" :virtual-lines="30"
                        path="$"
@@ -44,22 +44,37 @@ export default defineComponent({
 <script setup>
 const props = defineProps({
   data: {
-    type: Object ,
+    type: Object,
     default: null,
   },
 })
 const vuejsonpretty = ref()
 const selectedPaths = ref([])
 
+const jsonpath = window.jsonpath
+
 const clearSelected = () => {
   selectedPaths.value = []
 }
 const valueFormatter = (data, key, path, defaultFormatResult) => {
-  return `
-  <span>${defaultFormatResult}</span>
-  <div class="el-divider el-divider--vertical" style="--el-border-style:solid;"></div>
-  <a href="/#/">test</a>
-  `
+  let value = `<span>${defaultFormatResult}</span>`
+  for (let i = 0, len = props.data.masters.length; i < len; i++) {
+    if (path && path.indexOf('-') > -1) {
+      return value
+      // const params = path.split(".")
+      // for (let j = 0,l=params.length; j < l; j++) {
+      //   if (params.indexOf('-') > -1) {
+      // }
+    }
+
+    const v = jsonpath.query(props.data.masters[i], path)[0];
+    // console.log({data, key, path, defaultFormatResult,v})
+    value += `
+        <div class="el-divider el-divider--vertical" style="--el-border-style:solid;"></div>
+        <span class="${data !== v ? 'diff-red' : ''}">${v}</span>
+    `
+  }
+  return value
 }
 </script>
 
@@ -80,4 +95,10 @@ const valueFormatter = (data, key, path, defaultFormatResult) => {
   color: grey;
 }
 
+</style>
+
+<style>
+.diff-red{
+  color: red;
+}
 </style>
