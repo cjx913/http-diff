@@ -66,6 +66,13 @@ public class HttpDiffyProperties implements InitializingBean {
     @Getter
     private String swaggerUrl;
 
+    @Setter
+    @Getter
+    private String h2WebServerPort = "8082";
+    @Setter
+    @Getter
+    private String h2TcpServerPort = "9092";
+
     {
         antPathMatcher = new AntPathMatcher();
         antPathMatcher.setCachePatterns(true);

@@ -13,12 +13,24 @@ http:
 #      master2: http://14.215.179.108
 
 #    swagger-url: https://petstore.swagger.io/v2/swagger.json
+
 spring:
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-admin-password: http-diff
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/http_diff
-    username: root
-    password: cjx913
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:file:./data/http-diff;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+#    url: jdbc:h2:mem:http_diff;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: http-diff
+    password: http-diff
+
+  #    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/http_diff
+#    username: root
+#    password:
   thymeleaf:
     cache: false
 logging:

@@ -22,7 +22,7 @@ import java.util.Map;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName(schema = "http_diff", value = "http_diff_result", autoResultMap = true)
+@TableName(schema = "HTTP_DIFF",value = "http_diff_result", autoResultMap = true)
 public class HttpDiffResult implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;

@@ -13,6 +13,6 @@ import java.util.List;
 public interface HttpDiffResultMapper extends BaseMapper<HttpDiffResult> {
 
     @Select({"select DISTINCT t.key, count(t.key) totalCount, sum(case when t.result = 1 then 1 else 0 end) passCount",
-            "from http_diff.http_diff_result t", "where t.version=#{version}", "group by t.key"})
+            "from HTTP_DIFF.http_diff_result t", "where t.version=#{version}", "group by t.key"})
     List<HttpDiffKey> selectHttpDiffKey(@Param("version") String version);
 }

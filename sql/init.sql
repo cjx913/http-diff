@@ -1,5 +1,5 @@
 -- auto-generated definition
-create table http_diff_result
+create table  http_diff_result
 (
     id                     int auto_increment comment '主键',
     version                varchar(64)   default '' not null comment '版本',
