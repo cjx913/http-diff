@@ -20,7 +20,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -107,7 +109,7 @@ public class HttpDiffContent implements Serializable {
         return candidate.request()
                 .doOnSuccess(candidateHttpDiffResponseInfo -> {
                     Mono.fromCallable(() -> HttpDiffResult.builder()
-                            .version(this.version).key(this.key).denoise(denoise)
+                            .version(this.version).key(this.key).denoise(denoise).createTime(LocalDateTime.now())
                             .candidate(candidateHttpDiffResponseInfo)
                             .build())
                             .flatMap(this::request)
@@ -172,40 +174,46 @@ public class HttpDiffContent implements Serializable {
             return new EqualsJsonPathValueInfo(false);
         }
 
-        EqualsJsonPathValueInfo equalsJsonPathValueInfo = new EqualsJsonPathValueInfo();
-        boolean equals = true;
-        Map<String, Object> paths = JSONPath.paths(object);
-        Set<Map.Entry<String, Object>> entries = paths.entrySet();
-        for (Map.Entry<String, Object> entry : entries) {
-            String path = entry.getKey();
-            Object value = entry.getValue();
-            JsonPathValueInfo jsonPathValueInfo = new JsonPathValueInfo(path, value);
-            if (!jsonPathValue.containsKey(path)) {
-                jsonPathValueInfo.setContainsKey(false);
-            } else {
-                Object o = jsonPathValue.get(path);
-                if (!InvalidObject.invalidObject.equals(o)) {
-                    jsonPathValueInfo.setExpectValue(o);
-                }
-            }
-            if (equals && !jsonPathValueInfo.isEquals()) {
-                equals = false;
-            }
-            equalsJsonPathValueInfo.getJsonPathValueInfos().add(jsonPathValueInfo);
-        }
-        equalsJsonPathValueInfo.setEquals(equals);
-        return equalsJsonPathValueInfo;
-
-//        String jsonString = object == null ? null : object instanceof String ? (String) object : JSON.toJSONString(object);
-//        Set<Map.Entry<String, Object>> entries = jsonPathValue.entrySet();
+//        EqualsJsonPathValueInfo equalsJsonPathValueInfo = new EqualsJsonPathValueInfo();
+//        boolean equals = true;
+//        Map<String, Object> paths = JSONPath.paths(object);
+//        Set<Map.Entry<String, Object>> entries = paths.entrySet();
 //        for (Map.Entry<String, Object> entry : entries) {
 //            String path = entry.getKey();
-//            Object read = JSONPath.read(jsonString, path);
 //            Object value = entry.getValue();
-//            if ((value == null && read == null) || (value != null && value.equals(read))) continue;
-//            return false;
+//            JsonPathValueInfo jsonPathValueInfo = new JsonPathValueInfo(path, value);
+//            if (!jsonPathValue.containsKey(path)) {
+//                jsonPathValueInfo.setContainsKey(false);
+//            } else {
+//                Object o = jsonPathValue.get(path);
+//                if (!InvalidObject.invalidObject.equals(o)) {
+//                    jsonPathValueInfo.setExpectValue(o);
+//                }
+//            }
+//            if (equals && !jsonPathValueInfo.isEquals()) {
+//                equals = false;
+//            }
+//            equalsJsonPathValueInfo.getJsonPathValueInfos().add(jsonPathValueInfo);
 //        }
-//        return true;
+//        equalsJsonPathValueInfo.setEquals(equals);
+//        return equalsJsonPathValueInfo;
+
+        String jsonString = object == null ? null : object instanceof String ? (String) object : JSON.toJSONString(object);
+        Set<Map.Entry<String, Object>> entries = jsonPathValue.entrySet();
+        for (Map.Entry<String, Object> entry : entries) {
+            String path = entry.getKey();
+            Object read = JSONPath.read(jsonString, path);
+            if(read instanceof Number){
+                read = new BigDecimal(read.toString());
+            }
+            Object value = entry.getValue();
+            if(value instanceof Number){
+                value = new BigDecimal(value.toString());
+            }
+            if ((value == null && read == null) || (value != null && value.equals(read))) continue;
+            return new EqualsJsonPathValueInfo(false);
+        }
+        return new EqualsJsonPathValueInfo(true);
     }
 
     @Setter
@@ -268,12 +276,12 @@ public class HttpDiffContent implements Serializable {
             if (max.isPresent()) {
                 Map.Entry<Object, Long> objectLongEntry = max.get();
                 if (objectLongEntry.getValue() < finalMinExpectSameCount) {
-                    map.put(path, InvalidObject.invalidObject);
+//                    map.put(path, InvalidObject.invalidObject);
                 } else {
                     map.put(path, objectLongEntry.getKey());
                 }
             } else {
-                map.put(path, InvalidObject.invalidObject);
+//                map.put(path, InvalidObject.invalidObject);
             }
         });
         return map;
@@ -304,18 +312,19 @@ public class HttpDiffContent implements Serializable {
             for (Map.Entry<String, Object> entry : entries) {
                 String path = entry.getKey();
                 Object value = entry.getValue();
-                if (!(value instanceof String
+                if (value instanceof String
                         || value instanceof Number
-                        || value instanceof Boolean)) continue;
-                if (!map.containsKey(path)) {
-                    List<Object> list = new ArrayList<>();
-                    for (int j = 0; j < i; j++) {
-                        list.add(null);
+                        || value instanceof Boolean) {
+                    if (!map.containsKey(path)) {
+                        List<Object> list = new ArrayList<>();
+                        for (int j = 0; j < i; j++) {
+                            list.add(null);
+                        }
+                        list.add(value);
+                        map.put(path, list);
+                    } else {
+                        map.get(path).add(value);
                     }
-                    list.add(value);
-                    map.put(path, list);
-                } else {
-                    map.get(path).add(value);
                 }
             }
         }

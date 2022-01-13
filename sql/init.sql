@@ -9,9 +9,16 @@ create table http_diff_result
     expect_json_path_value json                     not null,
     candidate              json                     not null,
     masters                json                     not null,
+    create_time            datetime                 null comment '创建时间',
     constraint http_diff_result_id_uindex
         unique (id)
 );
+
+create index http_diff_result_key_index
+    on http_diff_result (`key`);
+
+create index http_diff_result_version_index
+    on http_diff_result (version);
 
 alter table http_diff_result
     add primary key (id);

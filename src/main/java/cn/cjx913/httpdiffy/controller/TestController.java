@@ -30,13 +30,7 @@ public class TestController {
         map.put("data", hashMap);
         map.put("body", body);
         log.info("{}", map);
-        if (!"cjx913".equals(username)) {
-            try {
-                TimeUnit.SECONDS.sleep(4);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+
         return Mono.just(map)
 //                .doOnSuccess(s -> {
 //                    new Thread(()->{
@@ -56,12 +50,19 @@ public class TestController {
                                @RequestBody(required = false) Object body) {
         JSONArray jsonArray = new JSONArray();
         jsonArray.add(body);
-        jsonArray.add("_cjx913_");
+        jsonArray.add("test");
         jsonArray.add(LocalDateTime.now());
         jsonArray.add(username);
         jsonArray.add(1);
         jsonArray.add(true);
-
+        Random random = new Random();
+        jsonArray.add(random.nextInt());
+        jsonArray.add(random.nextLong());
+        jsonArray.add(random.nextDouble());
+        jsonArray.add(random.nextBoolean());
+        jsonArray.add(UUID.randomUUID());
+        jsonArray.add(Arrays.asList("a", "b", "c",
+                random.nextInt(), random.nextBoolean(), random.nextDouble(),UUID.randomUUID()));
 
         return Mono.justOrEmpty(jsonArray);
     }

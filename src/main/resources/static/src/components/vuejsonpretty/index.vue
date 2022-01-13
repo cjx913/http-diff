@@ -34,10 +34,8 @@
 <script>
 import { defineComponent, defineProps, ref, computed } from 'vue'
 
-const VueJsonPretty = window.VueJsonPretty.default
 export default defineComponent({
   name: "vuejsonpretty",
-  components: {'vue-json-pretty': VueJsonPretty}
 })
 </script>
 
@@ -67,11 +65,11 @@ const valueFormatter = (data, key, path, defaultFormatResult) => {
       // }
     }
 
-    const v = jsonpath.query(props.data.masters[i], path)[0];
+    let v = jsonpath.query(props.data.masters[i], path)[0];
     // console.log({data, key, path, defaultFormatResult,v})
     value += `
         <div class="el-divider el-divider--vertical" style="--el-border-style:solid;"></div>
-        <span class="${data !== v ? 'diff-red' : ''}">${v}</span>
+        <span class="${data !== v ? 'diff-red' : ''}">${v&&typeof v==='string'?`"${v}"`:v}</span>
     `
   }
   return value

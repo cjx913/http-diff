@@ -95,16 +95,20 @@
 
               <vxe-column field="version" title="version" width="100" align="center"></vxe-column>
               <vxe-column field="denoise" title="denoise" width="80" align="right"></vxe-column>
-              <vxe-column title="查看" width="200" align="center" flex="right">
+              <vxe-column field="createTime" title="createTime" width="150"></vxe-column>
+              <vxe-column title="查看" width="250" align="center" fixed="right">
                 <template #default="{row}">
                   <el-space>
                     <el-button type="text" @click="openCompareResultModel(row)">比对结果</el-button>
                     <el-button type="text" @click="openCompareDetailsModel(row)">比对详情</el-button>
+                    <el-button type="text" @click="openExceptValueModel(row.expectJsonPathValue)">期望值</el-button>
                   </el-space>
                 </template>
               </vxe-column>
             </vxe-table>
-            <vxe-modal v-model="compareResultModel.visible" width="70vw" height="80%" min-height="400" show-zoom resize title="比对结果">
+            <vxe-modal v-model="compareResultModel.visible" width="70vw" height="80%" min-height="400" show-zoom
+                       :destroy-on-close="true" resize
+                       title="比对结果">
               <template #default>
                 <div style="height: 100%;overflow: hidden">
                   <vuejsonpretty :data="compareResultModel.data"></vuejsonpretty>
@@ -112,6 +116,7 @@
               </template>
             </vxe-modal>
             <vxe-modal v-model="compareDetailsModel.visible" width="70vw" height="80%" min-height="400" show-zoom
+                       :destroy-on-close="true"
                        resize title="比对详情">
               <template #default>
                 <div style="height: 100%;overflow: hidden">
@@ -129,6 +134,24 @@
                 </div>
               </template>
             </vxe-modal>
+            <vxe-modal v-model="exceptValueModel.visible" width="70vw" height="80%" min-height="400" show-zoom
+                       :destroy-on-close="true"
+                       resize title="期望值">
+              <template #default>
+                <div style="height: 100%;overflow: hidden">
+                  <el-scrollbar>
+                    <vue-json-pretty  style="height: 100%"
+                                     :data="exceptValueModel.data"
+                                     :show-length="true"
+                                     :virtual="true" :virtual-lines="30"
+                                     path="$"
+                    >
+                    </vue-json-pretty>
+                  </el-scrollbar>
+                </div>
+              </template>
+            </vxe-modal>
+
           </div>
           <div>
             <vxe-pager
@@ -171,6 +194,10 @@ const compareResultModel = reactive({
   data: {}
 })
 const compareDetailsModel = reactive({
+  visible: false,
+  data: {}
+})
+const exceptValueModel = reactive({
   visible: false,
   data: {}
 })
@@ -224,6 +251,10 @@ const openCompareResultModel = (data) => {
 const openCompareDetailsModel = (data) => {
   compareDetailsModel.visible = true
   compareDetailsModel.data = data
+}
+const openExceptValueModel = (data) => {
+  exceptValueModel.visible = true
+  exceptValueModel.data = data
 }
 
 </script>

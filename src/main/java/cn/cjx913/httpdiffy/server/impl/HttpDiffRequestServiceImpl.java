@@ -11,14 +11,14 @@ import java.util.List;
 
 @Service
 public class HttpDiffRequestServiceImpl implements HttpDiffRequestService {
-    @Override
-    public LinkedMultiValueMap<String, String> getQueryParams(HttpDiffRequestContent httpDiffRequestContent) {
-
-        if (!"candidate".equals(httpDiffRequestContent.getName())) {
-            LinkedMultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>(1);
-            queryParams.set("username", "cjx91311");
-            return queryParams;
-        }
-        return httpDiffRequestContent.getQueryParams();
-    }
+//    @Override
+//    public LinkedMultiValueMap<String, String> getQueryParams(HttpDiffRequestContent httpDiffRequestContent) {
+//
+//        if (!"candidate".equals(httpDiffRequestContent.getName())) {
+//            LinkedMultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>(1);
+//            queryParams.set("username", "test");
+//            return queryParams;
+//        }
+//        return httpDiffRequestContent.getQueryParams();
+//    }
 }

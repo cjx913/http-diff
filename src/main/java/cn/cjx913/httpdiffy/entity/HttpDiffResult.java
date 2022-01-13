@@ -15,6 +15,7 @@ import lombok.experimental.SuperBuilder;
 import org.apache.ibatis.type.JdbcType;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +40,8 @@ public class HttpDiffResult implements Serializable {
     private Boolean result;
     @TableField(typeHandler = FastjsonTypeHandler.class, jdbcType = JdbcType.VARCHAR)
     private Map<String, Object> expectJsonPathValue;
+
+    private LocalDateTime createTime;
 
 
 }

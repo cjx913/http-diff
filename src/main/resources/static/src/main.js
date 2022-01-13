@@ -1,6 +1,7 @@
 const Vue = window.Vue
 const VueRouter = window.VueRouter
-import { loadModule as _loadModule  } from "./js/vue3-sfc-loader.esm.js"
+import { loadModule as _loadModule } from "./js/vue3-sfc-loader.esm.js"
+
 const ElementPlus = window.ElementPlus
 
 const VXETable = window.VXETable
@@ -37,7 +38,7 @@ const options = {
         document.head.insertBefore(style, ref);
     },
 }
-const loadModule = (comp)=>_loadModule(comp,options)
+const loadModule = (comp) => _loadModule(comp, options)
 
 const routes = [
     {path: '/', redirect: '/result'},
@@ -58,4 +59,5 @@ const app = Vue.createApp({
 app.use(router)
     .use(ElementPlus)
     .use(VXETable)
+    .component("vue-json-pretty", window.VueJsonPretty.default)
     .mount('#app');

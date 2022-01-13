@@ -1,11 +1,10 @@
 <template>
   <div class="jsondiffpatch" v-html="val">
-
   </div>
 </template>
 
 <script>
-import {defineComponent,ref, defineProps, watch } from "vue"
+import {defineComponent,ref, defineProps, watch ,onMounted} from "vue"
 export default defineComponent({
   name: "jsondiffpatch"
 })
@@ -55,12 +54,16 @@ const diff = () => {
   console.log({left, right})
   const delta = instance.diff(left, right);
   val.value = jsondiffpatch.formatters.html.format(delta, left)
-  console.log(val.value, '--------')
+  // console.log(val.value, '--------')
 }
 
-watch(() => props.left, () => {
+onMounted(()=>{
   diff()
 })
+
+// watch(() => props.left, () => {
+//   diff()
+// })
 
 
 </script>

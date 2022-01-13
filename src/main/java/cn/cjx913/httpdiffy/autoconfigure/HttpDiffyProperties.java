@@ -115,17 +115,16 @@ public class HttpDiffyProperties implements InitializingBean {
                     .clientConnector(new ReactorClientHttpConnector(HttpClient.create()
                             .followRedirect(true)))
                     .build().get().uri(swaggerUrl)
-                    .exchangeToMono(clientResponse -> {
-                        return clientResponse.bodyToMono(LinkedHashMap.class);
-                    }).subscribe(map -> {
-                String basePath = (String) map.getOrDefault("basePath", "");
-                LinkedHashMap<String, LinkedHashMap<String, Object>> paths = (LinkedHashMap<String, LinkedHashMap<String, Object>>) map.getOrDefault("paths", new LinkedHashMap<>(0));
-                paths.forEach((path, methodMap) -> {
-                    methodMap.keySet().forEach(method -> {
-                        keys.add(method.toUpperCase(Locale.ROOT) + " " + basePath + path);
+                    .exchangeToMono(clientResponse -> clientResponse.bodyToMono(LinkedHashMap.class))
+                    .subscribe(map -> {
+                        String basePath = (String) map.getOrDefault("basePath", "");
+                        LinkedHashMap<String, LinkedHashMap<String, Object>> paths = (LinkedHashMap<String, LinkedHashMap<String, Object>>) map.getOrDefault("paths", new LinkedHashMap<>(0));
+                        paths.forEach((path, methodMap) -> {
+                            methodMap.keySet().forEach(method -> {
+                                keys.add(method.toUpperCase(Locale.ROOT) + " " + basePath + path);
+                            });
+                        });
                     });
-                });
-            });
 
         }
     }
