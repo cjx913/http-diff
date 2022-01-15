@@ -50,7 +50,7 @@ public class HttpDiffyApplication {
     @Bean
     public RouterFunction<ServerResponse> httpdiffRouter() {
         return route(
-                path("/httpdiff/**").and(methods(GET, POST, PUT, DELETE)),
+                path("/httpdiffy/**").and(methods(GET, POST, PUT, DELETE)),
                 this::handle
         );
     }
@@ -76,7 +76,7 @@ public class HttpDiffyApplication {
     }
 
     private Mono<ServerResponse> handle(ServerRequest request, Object body, MultiValueMap<String, String> formData) {
-        String path = request.path().substring(9);
+        String path = request.path().substring(10);
         String methodName = request.methodName();
         String s = methodName.toUpperCase() + " " + path;
         String matchKey = properties.matchKey(s);
