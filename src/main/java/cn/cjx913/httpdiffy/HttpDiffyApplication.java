@@ -3,31 +3,21 @@ package cn.cjx913.httpdiffy;
 import cn.cjx913.httpdiffy.autoconfigure.HttpDiffyProperties;
 import cn.cjx913.httpdiffy.content.ContentHelper;
 import cn.cjx913.httpdiffy.content.HttpDiffContent;
-import cn.cjx913.httpdiffy.content.HttpDiffResponseInfo;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.ParserConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.server.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.springframework.http.HttpMethod.*;
@@ -85,7 +75,7 @@ public class HttpDiffyApplication {
         }
 
         return Mono.just(ContentHelper.createHttpDiffContent(matchKey, request.method(), path,
-                new LinkedMultiValueMap<>(request.queryParams()), request.headers().asHttpHeaders(),
+                request.headers().asHttpHeaders(), new LinkedMultiValueMap<>(request.queryParams()),
                 new LinkedMultiValueMap<>(formData), body))
                 .flatMap(HttpDiffContent::request)
                 .flatMap(candidateHttpDiffResponseInfo -> {

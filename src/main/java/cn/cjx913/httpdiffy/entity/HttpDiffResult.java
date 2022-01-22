@@ -13,9 +13,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.apache.ibatis.type.JdbcType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,15 +35,22 @@ public class HttpDiffResult implements Serializable {
     private String key;
     private Integer denoise;
 
-    @TableField(typeHandler = FastjsonTypeHandler.class, jdbcType = JdbcType.VARCHAR)
+    @TableField(value = "`candidate`",typeHandler = FastjsonTypeHandler.class, jdbcType = JdbcType.VARCHAR)
     private HttpDiffResponseInfo candidate;
+    @TableField(value = "`primary`",typeHandler = FastjsonTypeHandler.class, jdbcType = JdbcType.VARCHAR)
+    private HttpDiffResponseInfo primary;
+    @TableField(value = "`secondary`",typeHandler = FastjsonTypeHandler.class, jdbcType = JdbcType.VARCHAR)
+    private HttpDiffResponseInfo secondary;
     @TableField(typeHandler = FastjsonTypeHandler.class, jdbcType = JdbcType.VARCHAR)
     private List<HttpDiffResponseInfo> masters;
 
     private Boolean result;
     @TableField(typeHandler = FastjsonTypeHandler.class, jdbcType = JdbcType.VARCHAR)
     private Map<String, Object> expectJsonPathValue;
-
+    @TableField(typeHandler = FastjsonTypeHandler.class, jdbcType = JdbcType.VARCHAR)
+    private LinkedMultiValueMap<String, Object> ignoreJsonPathValue ;
+    @TableField(typeHandler = FastjsonTypeHandler.class, jdbcType = JdbcType.VARCHAR)
+    private Map<String, Object> actualJsonPathValue ;
     private LocalDateTime createTime;
 
 

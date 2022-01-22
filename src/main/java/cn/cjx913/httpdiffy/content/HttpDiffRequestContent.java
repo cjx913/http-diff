@@ -6,15 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClientRequest;
 
 import java.io.Serializable;
-import java.time.Duration;
-import java.util.LinkedHashMap;
 
 @Slf4j
 @ToString(exclude = {"httpDiffRequestService", "webClient", "httpDiffContent"})
@@ -81,8 +76,10 @@ public class HttpDiffRequestContent implements Serializable {
                         .queryParams(this.queryParams)
                         .build())
                 .headers(headers -> {
-                    headers.clear();
-                    headers.addAll(this.headers);
+                    if (this.headers != null&&!this.headers.isEmpty()) {
+                        headers.clear();
+                        headers.addAll(this.headers);
+                    }
                 });
         if (this.body != null) {
             spec.bodyValue(this.body);

@@ -44,6 +44,14 @@ public class HttpDiffyProperties implements InitializingBean {
     public String candidate;
     @Getter
     public WebClient candidateWebClient;
+    @Setter
+    public String primary;
+    @Getter
+    public WebClient primaryWebClient;
+    @Setter
+    public String secondary;
+    @Getter
+    public WebClient secondaryWebClient;
 
     @Setter
     @Builder.Default
@@ -51,7 +59,6 @@ public class HttpDiffyProperties implements InitializingBean {
     @Getter
     @Builder.Default
     public Map<String, WebClient> masterWebClients = new LinkedHashMap<>();
-
     /**
      * 降噪机器数
      */
@@ -79,10 +86,11 @@ public class HttpDiffyProperties implements InitializingBean {
         if (!StringUtils.hasText(candidate)) {
             throw new HttpDiffyPropertiesException("请配置" + PREFIX + ".candidate");
         }
-        if (CollectionUtils.isEmpty(masters)) {
-            throw new HttpDiffyPropertiesException("请配置" + PREFIX + ".masters");
+        if (CollectionUtils.isEmpty(masters)
+                && (!StringUtils.hasText(primary) && !StringUtils.hasText(secondary))) {
+            throw new HttpDiffyPropertiesException("请配置" + PREFIX + ".primary和" + PREFIX + ".secondary," +
+                    "或配置" + PREFIX + ".masters");
         }
-
         candidateWebClient = WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.create()
                         .responseTimeout(Duration.ofSeconds(10))
@@ -92,22 +100,46 @@ public class HttpDiffyProperties implements InitializingBean {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                 .baseUrl(this.candidate)
                 .build();
-        masters.forEach((key, url) -> {
-            masterWebClients.put(key, WebClient.builder()
+        if (StringUtils.hasText(primary) && StringUtils.hasText(secondary)) {
+            primaryWebClient = WebClient.builder()
                     .clientConnector(new ReactorClientHttpConnector(HttpClient.create()
                             .responseTimeout(Duration.ofSeconds(10))
                             .compress(true)
                             .keepAlive(true)
                             .followRedirect(true)))
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .baseUrl(url)
-                    .build());
-        });
-
-        //降噪机器数设置合理值
-        int mastersSize = masters.size();
-        if (denoise == null || (mastersSize > 1 && denoise < 2) || (denoise > mastersSize))
-            denoise = mastersSize;
+                    .baseUrl(this.primary)
+                    .build();
+            secondaryWebClient = WebClient.builder()
+                    .clientConnector(new ReactorClientHttpConnector(HttpClient.create()
+                            .responseTimeout(Duration.ofSeconds(10))
+                            .compress(true)
+                            .keepAlive(true)
+                            .followRedirect(true)))
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .baseUrl(this.secondary)
+                    .build();
+            masters.clear();
+            masterWebClients.clear();
+        } else if (!CollectionUtils.isEmpty(masters)) {
+            masters.forEach((key, url) -> {
+                masterWebClients.put(key, WebClient.builder()
+                        .clientConnector(new ReactorClientHttpConnector(HttpClient.create()
+                                .responseTimeout(Duration.ofSeconds(10))
+                                .compress(true)
+                                .keepAlive(true)
+                                .followRedirect(true)))
+                        .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                        .baseUrl(url)
+                        .build());
+            });
+            primaryWebClient = null;
+            secondaryWebClient = null;
+            //降噪机器数设置合理值
+            int mastersSize = masters.size();
+            if (denoise == null || (mastersSize > 1 && denoise < 2) || (denoise > mastersSize))
+                denoise = mastersSize;
+        }
 
         if (StringUtils.hasText(swaggerUrl)) {
             WebClient webClient = WebClient.builder().build();

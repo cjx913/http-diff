@@ -94,6 +94,7 @@
               <!--              </vxe-column>-->
 
               <vxe-column field="version" title="version" width="100" align="center"></vxe-column>
+              <vxe-column field="denoise" title="denoise" width="80" align="right"></vxe-column>
               <vxe-column field="createTime" title="createTime" width="150"></vxe-column>
               <vxe-column title="查看" width="250" align="center" fixed="right">
                 <template #default="{row}">

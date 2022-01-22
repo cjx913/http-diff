@@ -31,14 +31,19 @@ public class HttpDiffResultController {
 
     @GetMapping("/keys")
     public Flux<HttpDiffKey> keys() {
-        return Flux.fromIterable(httpDiffResultService.getHttpDiffKey());
+        List<HttpDiffKey> httpDiffKey = httpDiffResultService.getHttpDiffKey();
+        httpDiffKey.sort((o1, o2) -> o1.getPassRate() > o2.getPassRate() ? 1
+                : o1.getPassRate() < o2.getPassRate() ? -1 : 0);
+        return Flux.fromIterable(httpDiffKey);
     }
 
     @GetMapping
     public Mono<IPage<HttpDiffResult>> get(Page<HttpDiffResult> page, HttpDiffResult httpDiffResult) {
         if (!StringUtils.hasText(httpDiffResult.getVersion()))
             httpDiffResult.setVersion(httpDiffyProperties.getVersion());
-        return Mono.just(httpDiffResultService.page(page, Wrappers.lambdaQuery(httpDiffResult)
-                .orderByDesc(HttpDiffResult::getId)));
+        return Mono.just(httpDiffResultService
+                .page(page, Wrappers.lambdaQuery(httpDiffResult)
+                        .orderByAsc(HttpDiffResult::getResult)
+                        .orderByDesc(HttpDiffResult::getId)));
     }
 }
