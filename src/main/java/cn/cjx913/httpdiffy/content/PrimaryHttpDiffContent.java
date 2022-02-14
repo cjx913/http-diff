@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -78,12 +79,18 @@ public class PrimaryHttpDiffContent extends DefaultHttpDiffContent {
             if (!(value instanceof CharSequence || value instanceof Number || value instanceof Boolean)) {
                 continue;
             }
+            if(value instanceof Number){
+                value = new BigDecimal(value.toString());
+            }
             String key = entry.getKey();
             //primary-secondary
             if (!secondaryPaths.containsKey(key)) {
                 ignorePathValues.put(key, Arrays.asList(value));
             } else {
                 Object secondaryValue = secondaryPaths.get(key);
+                if(secondaryValue instanceof Number){
+                    secondaryValue = new BigDecimal(secondaryValue.toString());
+                }
                 if ((value == null && secondaryValue != null)
                         || (value != null && !value.equals(secondaryValue))) {
                     ignorePathValues.put(key, Arrays.asList(value, secondaryValue));

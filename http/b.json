@@ -1,0 +1,95 @@
+{
+  "path": "/test/arr",
+  "responseBody": [
+    [
+      {
+        "ss": true,
+        "aaa": "asf",
+        "222": 0,
+        "aaaf": 0.22
+      },
+      {
+        "ss": true,
+        "aaa": "asf",
+        "222": 0,
+        "aaaf": 0.221
+      }
+    ],
+    "test",
+    "2022-01-22T19:22:53.575",
+    "cjx913",
+    1,
+    true,
+    -1034778346,
+    2303015366001475437,
+    0.7066225306085453,
+    false,
+    "c1b73f9b-3397-4186-8445-c4e8a34bb88d",
+    [
+      "a",
+      "b",
+      "c",
+      1537942650,
+      true,
+      0.17889547776545722,
+      "47af3c5f-1978-427f-b305-42feed5cf4ad"
+    ]
+  ],
+  "requestHeaders": {
+    "content-length": [
+      "138"
+    ],
+    "Accept": [
+      "*/*"
+    ],
+    "Connection": [
+      "keep-alive"
+    ],
+    "User-Agent": [
+      "PostmanRuntime/7.28.4"
+    ],
+    "Host": [
+      "localhost:8080"
+    ],
+    "Postman-Token": [
+      "15de3387-91c3-462b-96b3-06740adf4687"
+    ],
+    "Accept-Encoding": [
+      "gzip, deflate, br"
+    ],
+    "Content-Type": [
+      "application/json"
+    ]
+  },
+  "responseHeaders": {
+    "content-length": [
+      "326"
+    ],
+    "Content-Type": [
+      "application/json"
+    ]
+  },
+  "method": "POST",
+  "queryParams": {
+    "username": [
+      "cjx913"
+    ]
+  },
+  "requestBody": [
+    {
+      "ss": true,
+      "aaa": "asf",
+      "222": 0,
+      "aaaf": 0.22
+    },
+    {
+      "ss": true,
+      "aaa": "asf",
+      "222": 0,
+      "aaaf": 0.221
+    }
+  ],
+  "httpStatus": "OK",
+  "name": "secondary",
+  "formData": {}
+}

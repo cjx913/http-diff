@@ -18,6 +18,12 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 //@SpringBootTest
 class HttpDiffyApplicationTests {
+    @Test
+    public void ss(){
+        System.out.println(0B1111111111111111);
+        System.out.println("0B"+Integer.toBinaryString(0B0001^0B0010));
+        System.out.println("0B"+Integer.toBinaryString(0B0001^0B0010^0B0100));
+    }
 
     @Test
     public void test() throws JsonProcessingException {
