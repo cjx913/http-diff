@@ -41,7 +41,7 @@ class DiffInfoTest {
         map4.put("b", 1);
         map4.put("c", 1.0);
         map4.put("d", false);
-//        map4.put("e", Arrays.asList("a", "b", "c"));
+        map4.put("e", Arrays.asList("a", "c", "b"));
         map4.put("f", map1);
         System.out.println("map:" + new DiffInfo(map3, map4).compare());
         System.out.println(new DiffInfo(Arrays.asList(map3, map4), Arrays.asList(map3, map4)).compare());//NONE

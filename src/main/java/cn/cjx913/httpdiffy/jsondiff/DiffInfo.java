@@ -285,7 +285,7 @@ public class DiffInfo implements Serializable {
             //修改data和baseBase
             this.data = dataHashCode;
             this.baseData = baseDataHashCode;
-            if (this.data != this.baseData) {
+            if (this.data != null && !this.data.equals(this.baseData)) {
                 this.diff = this.diff ^ VALUE;
             }
 
@@ -304,48 +304,61 @@ public class DiffInfo implements Serializable {
                 this.diff = NONE;
             }
             int dataSize = data.size();
-            int baseDataSize = data.size();
+            int baseDataSize = baseData.size();
             if (dataSize != baseDataSize) {
                 this.diff = this.diff ^ SIZE;
             }
 
             int dataHashCode = 0;
             int baseDataHashCode = 0;
-            if (dataSize <= baseDataSize) {
+            if (dataSize < baseDataSize) {
                 int i = 0;
                 while (i < dataSize) {
-                    DiffInfo diffInfo = new DiffInfo(data.get(i), baseData.get(i));
+                    DiffInfo diffInfo = new DiffInfo(data.get(i), baseData.get(i), this.path + "[" + i + "]");
                     diffInfo.compare(map);
-                    dataHashCode = 31 * dataHashCode + Objects.hashCode(diffInfo.getData());
-                    baseDataHashCode = 31 * baseDataHashCode + Objects.hashCode(diffInfo.getBaseData());
+                    dataHashCode = dataHashCode + Objects.hashCode(diffInfo.getData());
+                    baseDataHashCode = baseDataHashCode + Objects.hashCode(diffInfo.getBaseData());
                     i++;
                 }
                 while (i < baseDataSize) {
-                    DiffInfo diffInfo = new DiffInfo(null, baseData.get(i));
+                    DiffInfo diffInfo = new DiffInfo(null, baseData.get(i), this.path + "[" + i + "]");
                     diffInfo.compare(map);
-                    dataHashCode = 31 * dataHashCode + Objects.hashCode(diffInfo.getData());
-                    baseDataHashCode = 31 * baseDataHashCode + Objects.hashCode(diffInfo.getBaseData());
+                    dataHashCode = dataHashCode + Objects.hashCode(diffInfo.getData());
+                    baseDataHashCode = baseDataHashCode + Objects.hashCode(diffInfo.getBaseData());
+                    i++;
+                }
+            } else if (dataSize > baseDataSize) {
+                int i = 0;
+                while (i < baseDataSize) {
+                    DiffInfo diffInfo = new DiffInfo(data.get(i), baseData.get(i), this.path + "[" + i + "]");
+                    diffInfo.compare(map);
+                    dataHashCode = dataHashCode + Objects.hashCode(diffInfo.getData());
+                    baseDataHashCode = baseDataHashCode + Objects.hashCode(diffInfo.getBaseData());
+                    i++;
+                }
+                while (i < dataSize) {
+                    DiffInfo diffInfo = new DiffInfo(data.get(i), null, this.path + "[" + i + "]");
+                    diffInfo.compare(map);
+                    dataHashCode = dataHashCode + Objects.hashCode(diffInfo.getData());
+                    baseDataHashCode = baseDataHashCode + Objects.hashCode(diffInfo.getBaseData());
                     i++;
                 }
             } else {
                 int i = 0;
                 while (i < baseDataSize) {
-                    DiffInfo diffInfo = new DiffInfo(data.get(i), baseData.get(i));
+                    DiffInfo diffInfo = new DiffInfo(data.get(i), baseData.get(i), this.path + "[" + i + "]");
                     diffInfo.compare(map);
-                    dataHashCode = 31 * dataHashCode + Objects.hashCode(diffInfo.getData());
-                    baseDataHashCode = 31 * baseDataHashCode + Objects.hashCode(diffInfo.getBaseData());
-                    i++;
-                }
-                while (i < dataSize) {
-                    DiffInfo diffInfo = new DiffInfo(baseData.get(i), null);
-                    diffInfo.compare(map);
-                    dataHashCode = 31 * dataHashCode + Objects.hashCode(diffInfo.getData());
-                    baseDataHashCode = 31 * baseDataHashCode + Objects.hashCode(diffInfo.getBaseData());
+                    dataHashCode = dataHashCode + Objects.hashCode(diffInfo.getData());
+                    baseDataHashCode = baseDataHashCode + Objects.hashCode(diffInfo.getBaseData());
                     i++;
                 }
             }
             this.data = dataHashCode;
             this.baseData = baseDataHashCode;
+            if (this.data != null && !this.data.equals(this.baseData)) {
+                this.diff = this.diff ^ VALUE;
+            }
+            return;
 
 //            JSONObject dataJSONObject = new JSONObject(dataSize);
 //            JSONObject baseDataJSONObject = new JSONObject(baseDataSize);
