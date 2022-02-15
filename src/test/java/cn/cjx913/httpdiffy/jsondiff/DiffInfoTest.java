@@ -12,6 +12,7 @@ class DiffInfoTest {
     @Test
     public void test() {
 
+        System.out.println(new DiffInfo(null, null).compare());
         System.out.println(new DiffInfo(Arrays.asList(1, 2, 3), Arrays.asList(1, 2, 3)).compare());
         System.out.println(new DiffInfo(Arrays.asList(1, 2, 3), Arrays.asList(1, 3, 2)).compare());
         System.out.println(new DiffInfo(Arrays.asList(1, 2, "3"), Arrays.asList(1, 2, 3)).compare());

@@ -3,19 +3,14 @@ package cn.cjx913.httpdiffy.jsondiff;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.parser.JSONToken;
-import com.alibaba.fastjson.serializer.SerializeConfig;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @ToString
 public class DiffInfo implements Serializable {
@@ -38,11 +33,11 @@ public class DiffInfo implements Serializable {
     /**
      * 不一致：值
      */
-    public final static Integer VALUE = 0B00010000;
+    public final static Integer VALUE = 0B00001000;
     /**
      * 不一致：长度
      */
-    public final static Integer SIZE = 0B00100000;
+    public final static Integer LENGTH = 0B00100000;
     /**
      * 不一致：精度
      */
@@ -55,16 +50,23 @@ public class DiffInfo implements Serializable {
     @Getter
     private String path;
     @Getter
-    private String jsonType;
-    @Getter
-    private int diff;
+    @Builder.Default
+    private int diff = NONE;
     @Getter
     private Object data;
+    @Getter
+    private String dataJsonType;
+    @Getter
+    private int dataLength;
     /**
      * 基准值
      */
     @Getter
     private Object baseData;
+    @Getter
+    private String baseDataJsonType;
+    @Getter
+    private int baseDataLength;
 
     public DiffInfo(Object data, Object baseData) {
         this(data, baseData, "$");
@@ -77,31 +79,42 @@ public class DiffInfo implements Serializable {
         if (baseData instanceof Character) {
             baseData = new String(new char[]{(char) baseData});
         }
-        if (!(data instanceof JSON || data instanceof CharSequence || data instanceof Number || data instanceof Boolean)) {
-            data = JSON.toJSON(data);
+        if (data instanceof CharSequence) {
+            dataLength = ((CharSequence) data).length();
+        } else if (data instanceof Number || data instanceof Boolean) {
+            dataLength = 1;
+        } else {
+            if (!(data instanceof JSONObject) || !(data instanceof JSONArray)) {
+                data = JSON.toJSON(data);
+            }
+            if (data instanceof JSONObject) {
+                dataLength = ((JSONObject) data).size();
+            } else if (data instanceof JSONArray) {
+                dataLength = ((JSONArray) data).size();
+            }
         }
-        if (!(baseData instanceof JSON || baseData instanceof CharSequence || baseData instanceof Number || baseData instanceof Boolean)) {
-            baseData = JSON.toJSON(baseData);
+        if (baseData instanceof CharSequence) {
+            baseDataLength = ((CharSequence) baseData).length();
+        } else if (baseData instanceof Number || baseData instanceof Boolean) {
+            baseDataLength = 1;
+        } else {
+            if (!(baseData instanceof JSONObject) || !(baseData instanceof JSONArray)) {
+                baseData = JSON.toJSON(baseData);
+            }
+            if (baseData instanceof JSONObject) {
+                baseDataLength = ((JSONObject) baseData).size();
+            } else if (baseData instanceof JSONArray) {
+                baseDataLength = ((JSONArray) baseData).size();
+            }
         }
 
-        this.data = data;
-        this.baseData = baseData;
         this.path = path;
-    }
-
-    private final static Comparator COMPARATOR = (o1, o2) -> o1.hashCode() > o2.hashCode() ? 1 : o1.hashCode() < o2.hashCode() ? -1 : 0;
-
-    private boolean isBaseJsonType(Object o) {
-        return o == null || o instanceof CharSequence || o instanceof Number || o instanceof Boolean;
-    }
-
-    private String getJsonType(Object o) {
-        if (o == null) return "null";
-        else if (o instanceof CharSequence) return "string";
-        else if (o instanceof Number) return "number";
-        else if (o instanceof Boolean) return "boolean";
-        else if (o instanceof Collection || o.getClass().isArray()) return "array";
-        else return "object";
+        this.data = data;
+        this.dataJsonType = getJsonType(this.data);
+        this.baseData = baseData;
+        this.baseDataJsonType = getJsonType(this.baseData);
+        if (this.baseDataLength != this.dataLength) this.diff = this.diff ^ LENGTH;
+        if (this.baseDataJsonType != this.dataJsonType) this.diff = this.diff ^ TYPE;
     }
 
     public Map<String, DiffInfo> compare() {
@@ -117,8 +130,7 @@ public class DiffInfo implements Serializable {
         boolean dataIsNull = this.data == null;
         boolean baseDataIsNull = this.baseData == null;
         if (dataIsNull && baseDataIsNull) {
-            this.jsonType = "null";
-            this.diff = NONE;
+            this.diff = this.diff ^ NONE;
             map.put(this.path, this);
             return;
         }
@@ -128,8 +140,7 @@ public class DiffInfo implements Serializable {
          * 把新增的值也列出来，标记为NEW
          */
         if (!dataIsNull && baseDataIsNull) {
-            this.jsonType = getJsonType(this.data);
-            this.diff = NEW;
+            this.diff = this.diff ^ NEW;
             map.put(this.path, this);
 
             if (this.data instanceof JSONObject) {
@@ -154,8 +165,7 @@ public class DiffInfo implements Serializable {
          * 把删除的值也列出来，标记为DELETE
          */
         if (dataIsNull && !baseDataIsNull) {
-            this.jsonType = getJsonType(this.baseData);
-            this.diff = DELETE;
+            this.diff = this.diff ^ DELETE;
             map.put(this.path, this);
 
             if (this.baseData instanceof JSONObject) {
@@ -189,15 +199,12 @@ public class DiffInfo implements Serializable {
          * VALUE ^ SIZE:长度一致并且值不一致
          */
         if (this.data instanceof CharSequence && this.baseData instanceof CharSequence) {
-            this.jsonType = "string";
             CharSequence dataCharSequence = (CharSequence) this.data;
             CharSequence baseDataCharSequence = (CharSequence) this.baseData;
             if (dataCharSequence.toString().equals(baseDataCharSequence.toString())) {
-                this.diff = NONE;
-            } else if (dataCharSequence.length() != baseDataCharSequence.length()) {
-                this.diff = VALUE ^ SIZE;
+                this.diff = this.diff ^ NONE;
             } else {
-                this.diff = VALUE;
+                this.diff = this.diff ^ VALUE;
             }
             map.put(this.path, this);
             return;
@@ -211,11 +218,10 @@ public class DiffInfo implements Serializable {
          * VALUE:值不一致
          */
         if (this.data instanceof Number && this.baseData instanceof Number) {
-            this.jsonType = "number";
             BigDecimal dataBigDecimal = new BigDecimal(this.data.toString());
             BigDecimal baseDataBigDecimal = new BigDecimal(this.baseData.toString());
             if (dataBigDecimal.equals(baseDataBigDecimal)) {
-                this.diff = NONE;
+                this.diff = this.diff ^ NONE;
                 map.put(this.path, this);
                 return;
             } else {
@@ -229,12 +235,12 @@ public class DiffInfo implements Serializable {
                 baseDataBigDecimal = baseDataBigDecimal.setScale(scale, RoundingMode.HALF_DOWN);
 
                 if (dataBigDecimal.equals(baseDataBigDecimal)) {
-                    this.diff = NONE ^ SCALE;
+                    this.diff = this.diff ^ NONE ^ SCALE;
                 } else {
                     if (dataScale != baseDataScale) {
-                        this.diff = VALUE ^ SCALE;
+                        this.diff = this.diff ^ VALUE ^ SCALE;
                     } else {
-                        this.diff = VALUE;
+                        this.diff = this.diff ^ VALUE;
                     }
                 }
                 map.put(this.path, this);
@@ -246,18 +252,16 @@ public class DiffInfo implements Serializable {
          *
          */
         if (this.data instanceof Boolean && this.baseData instanceof Boolean) {
-            this.jsonType = "boolean";
             if (Boolean.compare((boolean) data, (boolean) baseData) == 0) {
-                this.diff = NONE;
+                this.diff = this.diff ^ NONE;
             } else {
-                this.diff = VALUE;
+                this.diff = this.diff ^ VALUE;
             }
             map.put(this.path, this);
             return;
         }
 
         if (this.data instanceof JSONObject && this.baseData instanceof JSONObject) {
-            this.jsonType = "object";
             map.put(this.path, this);
             JSONObject data = (JSONObject) this.data;
             JSONObject baseData = (JSONObject) this.baseData;
@@ -265,9 +269,9 @@ public class DiffInfo implements Serializable {
             int dataSize = data.size();
             int baseDataSize = baseData.size();
             if (data.equals(baseData)) {
-                this.diff = NONE;
-            } else if (dataSize != baseDataSize) {
-                this.diff = SIZE;
+                this.diff = this.diff ^ NONE;
+            } else {
+                this.diff = this.diff ^ VALUE;
             }
 
             Set keys = new HashSet(dataSize);
@@ -296,7 +300,6 @@ public class DiffInfo implements Serializable {
          *
          */
         if (this.data instanceof JSONArray && this.baseData instanceof JSONArray) {
-            this.jsonType = "array";
             map.put(this.path, this);
             JSONArray data = (JSONArray) this.data;
             JSONArray baseData = (JSONArray) this.baseData;
@@ -306,7 +309,7 @@ public class DiffInfo implements Serializable {
             int dataSize = data.size();
             int baseDataSize = baseData.size();
             if (dataSize != baseDataSize) {
-                this.diff = this.diff ^ SIZE;
+                this.diff = this.diff ^ LENGTH;
             }
 
             int dataHashCode = 0;
@@ -394,9 +397,7 @@ public class DiffInfo implements Serializable {
 //            }
         }
 
-
         //类型不一致
-        this.jsonType = getJsonType(this.baseData);
         this.diff = TYPE;
         map.put(this.path, this);
 
@@ -417,9 +418,20 @@ public class DiffInfo implements Serializable {
             }
         }
 
-
         return;
     }
 
+    private static boolean isBaseJsonType(Object o) {
+        return o == null || o instanceof CharSequence || o instanceof Number || o instanceof Boolean;
+    }
+
+    private static String getJsonType(Object o) {
+        if (o == null) return "null";
+        else if (o instanceof CharSequence) return "string";
+        else if (o instanceof Number) return "number";
+        else if (o instanceof Boolean) return "boolean";
+        else if (o instanceof Collection || o.getClass().isArray()) return "array";
+        else return "object";
+    }
 
 }
