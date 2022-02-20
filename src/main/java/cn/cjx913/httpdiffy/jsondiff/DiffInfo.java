@@ -72,7 +72,7 @@ public class DiffInfo implements Serializable {
         this(data, baseData, "$");
     }
 
-    public DiffInfo(Object data, Object baseData, String path) {
+    private DiffInfo(Object data, Object baseData, String path) {
         if (data instanceof Character) {
             data = new String(new char[]{(char) data});
         }

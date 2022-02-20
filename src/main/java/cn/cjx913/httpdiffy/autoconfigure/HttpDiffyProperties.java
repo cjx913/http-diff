@@ -13,6 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.client.RootUriTemplateHandler;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.HttpComponentsClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -38,7 +39,20 @@ public class HttpDiffyProperties implements InitializingBean {
     @Setter
     @Getter
     @Builder.Default
-    public String version = "";
+    private int port = 7777;
+
+    @Setter
+    @Getter
+    @Builder.Default
+    private String version = "";
+    @Setter
+    @Getter
+    @Builder.Default
+    private String path = "/**";
+    @Setter
+    @Getter
+    @Builder.Default
+    private HttpMethod[] methods = new HttpMethod[]{HttpMethod.GET, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.DELETE};
 
     @Setter
     public String candidate;

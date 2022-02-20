@@ -1,25 +1,25 @@
 package cn.cjx913.httpdiffy.entity;
 
-import cn.cjx913.httpdiffy.content.HttpDiffResponseInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+@Table("diff")
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class HttpDiffResult implements Serializable {
+public class Diff implements Serializable {
+    @Id
     private Long id;
-    private String key;
-    private HttpDiffResponseInfo candidate;
-    private HttpDiffResponseInfo primary;
-    private HttpDiffResponseInfo secondary;
-
-    private LocalDateTime startTime;
+    private String mapping;
+    private Integer diff;
+    private LocalDateTime createTime;
     private LocalDateTime endTime;
 }

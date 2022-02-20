@@ -68,7 +68,7 @@ public class HttpDiffRequestContent implements Serializable {
 
     public Mono<HttpDiffResponseInfo> request() {
         requestBefore();
-        log.info("请求参数：{}", this);
+        log.debug("请求参数：{}", this);
 
         WebClient.RequestBodySpec spec = this.webClient
                 .method(this.getMethod())
@@ -76,7 +76,7 @@ public class HttpDiffRequestContent implements Serializable {
                         .queryParams(this.queryParams)
                         .build())
                 .headers(headers -> {
-                    if (this.headers != null&&!this.headers.isEmpty()) {
+                    if (this.headers != null && !this.headers.isEmpty()) {
                         headers.clear();
                         headers.addAll(this.headers);
                     }
@@ -94,12 +94,12 @@ public class HttpDiffRequestContent implements Serializable {
                     return Mono.just(new ResponseEntity<Object>(HttpStatus.INTERNAL_SERVER_ERROR));
                 })
                 .map(responseEntity -> {
-                    log.info("响应体：{}", responseEntity);
+                    log.debug("响应体：{}", responseEntity);
                     return HttpDiffResponseInfo.builder()
                             .name(this.name)
                             .method(this.method).path(this.path)
                             .queryParams(this.queryParams).formData(this.formData)
-                            .requestHeaders(this.headers)
+                            .requestHeaders(new LinkedMultiValueMap<>(this.headers))
                             .requestBody(this.body)
                             .httpStatus(responseEntity.getStatusCode())
                             .responseHeaders(responseEntity.getHeaders())

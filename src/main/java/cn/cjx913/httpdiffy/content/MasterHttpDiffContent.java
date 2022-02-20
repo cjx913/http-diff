@@ -1,13 +1,11 @@
 package cn.cjx913.httpdiffy.content;
 
 import cn.cjx913.httpdiffy.entity.HttpDiffResult;
-import cn.cjx913.httpdiffy.exception.HttpDiffContentException;
 import cn.cjx913.httpdiffy.exception.HttpDiffyException;
-import cn.cjx913.httpdiffy.server.HttpDiffResultService;
+import cn.cjx913.httpdiffy.server.HttpDiffyService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONPath;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -15,17 +13,14 @@ import org.springframework.http.HttpMethod;
 import org.springframework.lang.NonNull;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -40,6 +35,10 @@ public class MasterHttpDiffContent extends DefaultHttpDiffContent implements Ser
      */
     @Getter
     private int denoise;
+
+    @Setter
+    @Autowired
+    private HttpDiffyService httpDiffyService;
 
     MasterHttpDiffContent(Map<String, WebClient> masterWebClients, Integer denoise, String key, String version, WebClient candidateWebClient,
                           HttpMethod method, String path, HttpHeaders headers, LinkedMultiValueMap<String, String> queryParams,
@@ -65,8 +64,6 @@ public class MasterHttpDiffContent extends DefaultHttpDiffContent implements Ser
         return candidate.request()
                 .doOnSuccess(candidateHttpDiffResponseInfo -> {
                     Mono.fromCallable(() -> HttpDiffResult.builder()
-                            .version(this.version).key(this.key).denoise(denoise).createTime(LocalDateTime.now())
-                            .candidate(candidateHttpDiffResponseInfo)
                             .build())
                             .flatMap(this::request)
                             .subscribe();
@@ -82,7 +79,6 @@ public class MasterHttpDiffContent extends DefaultHttpDiffContent implements Ser
         return Flux.merge(list)
                 .collectList()
                 .doOnSuccess(masterHttpDiffResponseInfos -> {
-                    httpDiffResult.setMasters(masterHttpDiffResponseInfos);
                     boolean result = this.result(httpDiffResult);
                     log.info("httpDiffResult:{}", httpDiffResult);
                     log.info("result:{}", result);
@@ -91,23 +87,20 @@ public class MasterHttpDiffContent extends DefaultHttpDiffContent implements Ser
     }
 
     private boolean result(HttpDiffResult httpDiffResult) {
-        HttpDiffResponseInfo candidateHttpDiffResponseInfo = httpDiffResult.getCandidate();
-        List<HttpDiffResponseInfo> masterHttpDiffResponseInfos = httpDiffResult.getMasters();
+        HttpDiffResponseInfo candidateHttpDiffResponseInfo = null;
+        List<HttpDiffResponseInfo> masterHttpDiffResponseInfos = null;
 
         int masterHttpDiffResponseInfoSize = masterHttpDiffResponseInfos.size();
         int denoise = masterHttpDiffResponseInfoSize < this.denoise ? masterHttpDiffResponseInfoSize : this.denoise;
-        httpDiffResult.setDenoise(denoise);
 
         Map<String, List<Object>> bodyAnalysisJsonPathValue = analysisJsonPathValue(masterHttpDiffResponseInfos.stream()
                 .map(HttpDiffResponseInfo::getResponseBody)
                 .collect(Collectors.toList()));
         Map<String, Object> expectJsonPathValue = expectJsonPathValue(bodyAnalysisJsonPathValue, denoise);
-        httpDiffResult.setExpectJsonPathValue(expectJsonPathValue);
 
         EqualsJsonPathValueInfo equalsJsonPathValue = equalsJsonPathValue(candidateHttpDiffResponseInfo.getResponseBody(), expectJsonPathValue);
-        httpDiffResult.setResult(equalsJsonPathValue.isEquals());
 
-        return httpDiffResultService.save(httpDiffResult);
+        return false;
     }
 
     /**

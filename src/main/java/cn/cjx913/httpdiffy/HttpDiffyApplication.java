@@ -3,24 +3,25 @@ package cn.cjx913.httpdiffy;
 import cn.cjx913.httpdiffy.autoconfigure.HttpDiffyProperties;
 import cn.cjx913.httpdiffy.content.ContentHelper;
 import cn.cjx913.httpdiffy.content.HttpDiffContent;
-import com.alibaba.fastjson.parser.ParserConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
+import org.springframework.boot.web.server.WebServer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
 
+import java.net.InetSocketAddress;
 import java.util.*;
 
-import static org.springframework.http.HttpMethod.*;
 import static org.springframework.http.MediaType.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -28,7 +29,6 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Slf4j
 @SpringBootApplication
 @EnableConfigurationProperties({HttpDiffyProperties.class})
-@MapperScan(basePackages = {"cn.cjx913.httpdiffy.mapper"})
 public class HttpDiffyApplication {
     @Autowired
     private HttpDiffyProperties properties;
@@ -37,10 +37,27 @@ public class HttpDiffyApplication {
         SpringApplication.run(HttpDiffyApplication.class, args);
     }
 
+    @Bean(initMethod = "start", destroyMethod = "stop")
+    public WebServer httpdiffyWebServer(@Autowired HttpHandler httpHandler, @Autowired HttpDiffyProperties properties) {
+        NettyReactiveWebServerFactory nettyReactiveWebServerFactory = new NettyReactiveWebServerFactory(properties.getPort());
+        WebServer webServer = nettyReactiveWebServerFactory.getWebServer(httpHandler);
+        return webServer;
+    }
+
     @Bean
-    public RouterFunction<ServerResponse> httpdiffRouter() {
-        return route(
-                path("/httpdiffy/**").and(methods(GET, POST, PUT, DELETE)),
+    public RouterFunction<ServerResponse> httpdiffRouter(@Autowired HttpDiffyProperties properties) {
+        return route(new RequestPredicate() {
+                    @Override
+                    public boolean test(ServerRequest request) {
+                        Optional<InetSocketAddress> optional = request.localAddress();
+                        if (optional.isPresent() && properties.getPort() == optional.get().getPort()) {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+                        .and(path(properties.getPath()))
+                        .and(methods(properties.getMethods())),
                 this::handle
         );
     }
@@ -66,7 +83,7 @@ public class HttpDiffyApplication {
     }
 
     private Mono<ServerResponse> handle(ServerRequest request, Object body, MultiValueMap<String, String> formData) {
-        String path = request.path().substring(10);
+        String path = request.path();
         String methodName = request.methodName();
         String s = methodName.toUpperCase() + " " + path;
         String matchKey = properties.matchKey(s);

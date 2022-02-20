@@ -1,21 +1,12 @@
 package cn.cjx913.httpdiffy.entity;
 
-import cn.cjx913.httpdiffy.content.HttpDiffResponseInfo;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.apache.ibatis.type.JdbcType;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 
 @Data
 @SuperBuilder

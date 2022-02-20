@@ -3,26 +3,17 @@ http:
     version: 1.3
     candidate: http://localhost:8080
     primary: http://127.0.0.1:8080
-    secondary: http://192.168.9.127:8080
-#    masters:
-#      master1: http://127.0.0.1:8080
-#      master2: http://192.168.9.127:8080
-#      master3: http://localhost:8080
-
-#    candidate: http://14.215.179.108
-#    masters:
-#      master1: http://14.215.179.108
-#      master2: http://14.215.179.108
-
+    secondary: http://192.168.9.2:8080
 #    swagger-url: https://petstore.swagger.io/v2/swagger.json
 spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/http_diff
-    username: root
-    password: cjx913
+  r2dbc:
+    name: httpdiffy
+    url: r2dbc:h2:file://localhost/~/Downloads/data/http-diff;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: http-diff
+    password: http-diff
   thymeleaf:
     cache: false
+
 logging:
   level:
     cn:
@@ -30,6 +21,7 @@ logging:
         httpdiffy: debug
     org:
       springframework:
+        r2dbc: debug
         web:
           reactive:
             function:

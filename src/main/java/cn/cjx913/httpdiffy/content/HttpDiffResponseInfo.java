@@ -21,7 +21,7 @@ public class HttpDiffResponseInfo implements Serializable {
     private String name;
     private HttpMethod method;
     private String path;
-    private HttpHeaders requestHeaders;
+    private LinkedMultiValueMap<String, String> requestHeaders = new LinkedMultiValueMap<>();
     private LinkedMultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     private LinkedMultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
     private Object requestBody;

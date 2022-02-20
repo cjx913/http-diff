@@ -1,7 +1,6 @@
 package cn.cjx913.httpdiffy.content;
 
 import cn.cjx913.httpdiffy.exception.HttpDiffContentException;
-import cn.cjx913.httpdiffy.server.HttpDiffResultService;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,8 +20,7 @@ import reactor.core.publisher.Mono;
 @ToString
 @EqualsAndHashCode
 public abstract class DefaultHttpDiffContent implements HttpDiffContent {
-    @Autowired
-    protected HttpDiffResultService httpDiffResultService;
+
 
     /**
      * 匹配的url
